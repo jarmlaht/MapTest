@@ -44,14 +44,16 @@
 
             // device APIs are available
             function onDeviceReady() {
+                console.log("onDeviceReady() called");
                 var options = { timeout: 30000, enableHighAccuracy: true, maximumAge: 5000 };
                 navigator.geolocation.getCurrentPosition(onSuccess, onError, options);
             }
 
             // onSuccess Geolocation
             function onSuccess(position) {
+                console.log("onSuccess() called");
                 var element = document.getElementById('geolocation');
-                element.innerHTML = 'Latitude: ' + position.coords.latitude + '<br>' +
+                var coordinates = 'Latitude: ' + position.coords.latitude + '<br>' +
                 'Longitude: ' + position.coords.longitude + '<br>' +
                 'Altitude: ' + position.coords.altitude + '<br>' +
                 'Accuracy: ' + position.coords.accuracy + '<br>' +
@@ -59,6 +61,8 @@
                 'Heading: ' + position.coords.heading + '<br>' +
                 'Speed: ' + position.coords.speed + '<br>' +
                 'Timestamp: ' + position.timestamp + '<br>';
+                element.innerHTML = coordinates;
+                console.log(coordinates);
             }
 
             // onError Callback receives a PositionError object
@@ -76,7 +80,11 @@
                 var map = new google.maps.Map(document.getElementById('map'), {
                     center: {lat: -34.397, lng: 150.644}, zoom: 14
                 });
-                var infoWindow = new google.maps.InfoWindow({map: map});
+                var marker = new google.maps.Marker({
+                    map: map,
+                    animation: google.maps.Animation.DROP,
+                    title: 'Click to zoom'
+                });
 
                 // Try HTML5 geolocation.
                 if (navigator.geolocation) {
@@ -87,10 +95,18 @@
                             lng: position.coords.longitude
                         };
 
-                        infoWindow.setPosition(pos);
-                        infoWindow.setContent('Location found.');
-                        console.log(pos);
+                        var element = document.getElementById('geolocation');
+                        var coordinates = 'Latitude: ' + position.coords.latitude + ', ' +
+                        'Longitude: ' + position.coords.longitude + '<br>' +
+                        'Altitude: ' + position.coords.altitude + '<br>' +
+                        'Heading: ' + position.coords.heading + '<br>' +
+                        'Speed: ' + position.coords.speed + '<br>' +
+                        'Date: ' + new Date(position.timestamp);
+                        element.innerHTML = coordinates;
+                        marker.setPosition(pos);
                         map.setCenter(pos);
+                        console.log(coordinates);
+                        
                     }, function() {
                         handleLocationError(true, infoWindow, map.getCenter());
                     });
@@ -98,6 +114,13 @@
                     // Browser doesn't support Geolocation
                     handleLocationError(false, infoWindow, map.getCenter());
                 }
+                
+                marker.addListener('click', function() {
+                    if (map.getZoom() == 8) map.setZoom(14);
+                    else map.setZoom(8);
+                    map.setCenter(marker.getPosition());
+                    console.log("Zoom level: " + map.getZoom());
+                });
             }
 
             function handleLocationError(browserHasGeolocation, infoWindow, pos) {
@@ -106,6 +129,14 @@
                 'Error: The Geolocation service failed.' :
                 'Error: Your browser doesn\'t support geolocation.');
             }
+            
+            function toggleBounce() {
+                if (marker.getAnimation() !== null) {
+                    marker.setAnimation(null);
+                } else {
+                    marker.setAnimation(google.maps.Animation.BOUNCE);
+                }
+            }            
         </script>
     </head>
     <body>
